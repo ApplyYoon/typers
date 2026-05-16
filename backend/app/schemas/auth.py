@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from uuid import UUID
+from pydantic import BaseModel, EmailStr, field_validator, field_serializer
 import re
 
 
@@ -33,13 +34,17 @@ class TokenResponse(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: str
+    id: UUID
     username: str
     email: str
     level: int
     initial_cpm: int
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("id")
+    def serialize_id(self, v: UUID) -> str:
+        return str(v)
 
 
 class LevelUpdateRequest(BaseModel):
