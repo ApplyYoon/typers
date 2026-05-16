@@ -152,10 +152,17 @@
 /* ── 타속 테스트 ───────────────────────────────────────────── */
 .lt-speed-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   width: 100%;
   margin-bottom: 8px;
+}
+
+.lt-character {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .lt-timer {

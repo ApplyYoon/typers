@@ -90,7 +90,7 @@ const LevelTest: React.FC = () => {
   const speedFinishedRef = useRef(false);
   const finishSpeedRef = useRef<() => void>(() => {});
 
-  const { inputRef, handleKeyDown, getSyllableDisplay, totalCorrect, getScore } = useTypingEngine({
+  const { inputRef, handleKeyDown, getSyllableDisplay, totalCorrect, frame, getScore } = useTypingEngine({
     text: speedText,
     active: speedActive,
     onComplete: () => finishSpeedRef.current(),
@@ -240,11 +240,14 @@ const LevelTest: React.FC = () => {
 
   // ── 타속 테스트 ─────────────────────────────────────────────
   if (phase === 'speed') {
+    const charLevel = liveCpm >= 400 ? 3 : liveCpm >= 200 ? 2 : 1;
+    const charSrc   = `/typing/character_typing_${charLevel}-${frame}.png`;
     return (
       <div className="lt-page">
         <div className="lt-card lt-card--wide">
           <div className="lt-speed-header">
             <div className="lt-timer">{timeLeft}<span>초</span></div>
+            <img src={charSrc} alt="character" className="lt-character" />
             <div className="lt-live-cpm">{liveCpm} <span>CPM</span></div>
           </div>
           <TypingText
