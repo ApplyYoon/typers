@@ -17,9 +17,10 @@
   line-height: 1;
 }
 
-/* 한국어 커서: border-left 대신 ::before 사용 (inline-block 폭 유지) */
+/* 한국어 커서: border-left/margin 제거 후 ::before 사용 (1em 폭 엄격히 유지) */
 .typing-text--ko .char-cursor {
   border-left: none;
+  margin-left: 0;
   position: relative;
 }
 .typing-text--ko .char-cursor::before {
@@ -50,7 +51,6 @@
 .char-cursor {
   color: #d1d5db;
   border-left: 2.5px solid var(--purple-primary, #8758FF);
-  margin-left: 1px;
   animation: blink 0.9s step-end infinite;
 }
 @keyframes blink {
