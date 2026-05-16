@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authApi, saveToken } from '../api/auth';
+import { ApiError } from '../api/client';
 import './Auth.css';
 
 const Login: React.FC = () => {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm]       = useState({ username: '', password: '' });
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('typers_auth', 'true');
-    navigate('/home');
+    setError('');
+    setLoading(true);
+    try {
+      const data = await authApi.login(form.username, form.password);
+      saveToken(data.access_token);
+      navigate('/home');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '오류가 발생했습니다');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,11 +45,12 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="auth-input-group">
               <input
-                type="email"
-                placeholder="이메일"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                type="text"
+                placeholder="닉네임"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
                 className="auth-input"
+                required
               />
             </div>
             <div className="auth-input-group">
@@ -46,23 +60,20 @@ const Login: React.FC = () => {
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="auth-input"
+                required
               />
             </div>
-            <div className="auth-input-group">
-              <input
-                type="password"
-                placeholder="비밀번호 확인"
-                className="auth-input"
-              />
-            </div>
-            <button type="submit" className="auth-btn">로그인</button>
+            {error && <p className="auth-error">{error}</p>}
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? '로그인 중…' : '로그인'}
+            </button>
           </form>
 
           <p className="auth-divider">또는</p>
 
           <div className="social-btns">
             <button className="social-btn naver" title="네이버 로그인">N</button>
-            <button className="social-btn kakao" title="카카오 로그인">K</button>
+            <button className="social-btn kakao"  title="카카오 로그인">K</button>
             <button className="social-btn google" title="구글 로그인">G</button>
           </div>
 

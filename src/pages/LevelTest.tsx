@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import { getPracticeText } from '../data/texts';
 import TypingText from '../components/TypingText';
+import { authApi, getToken } from '../api/auth';
 import './LevelTest.css';
 
 type Phase = 'intro' | 'keyboard' | 'speed-intro' | 'speed' | 'result';
@@ -167,9 +168,15 @@ const LevelTest: React.FC = () => {
     setPhase('speed');
   };
 
-  const handleComplete = () => {
-    localStorage.setItem('typers_auth', 'true');
+  const handleComplete = async () => {
     localStorage.setItem('typers_level', String(level));
+    if (getToken()) {
+      try {
+        await authApi.updateLevel(level, finalCpm);
+      } catch {
+        // 서버 저장 실패해도 localStorage로 fallback
+      }
+    }
     navigate('/home');
   };
 

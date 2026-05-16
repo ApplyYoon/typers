@@ -141,9 +141,24 @@
   letter-spacing: 0.02em;
 }
 
-.auth-btn:hover {
+.auth-btn:hover:not(:disabled) {
   opacity: 0.92;
   transform: translateY(-1px);
+}
+
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  font-size: 13px;
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 4px;
 }
 
 .auth-divider {
