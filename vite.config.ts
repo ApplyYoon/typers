@@ -8,6 +8,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         rewrite: (path) => path.replace(/^\/api/, ''),
+        // WS는 직접 localhost:8000 연결 (useBattleSocket.ts 참고)
       },
     },
   },

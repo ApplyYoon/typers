@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -7,6 +8,7 @@ from app.models.user import User
 from app.schemas.auth import RegisterRequest, LoginRequest, UserResponse, LevelUpdateRequest
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.config import settings
+from app.services.redis_client import get_redis
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -68,6 +70,21 @@ async def logout(response: Response):
 @router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/ws-ticket")
+async def get_ws_ticket(current_user: User = Depends(get_current_user)):
+    """
+    WebSocket 연결용 단기 티켓 발급 (30초 유효, 1회 사용)
+
+    HttpOnly 쿠키는 Vite 프록시 → Docker 구간에서 WS 업그레이드 헤더로
+    전달되지 않을 수 있으므로, 짧게 살아있는 UUID 티켓을 Redis에 저장하고
+    WS URL 쿼리 파라미터로 전달한다.
+    """
+    ticket = str(uuid.uuid4())
+    r = get_redis()
+    await r.setex(f"ws_ticket:{ticket}", 30, str(current_user.id))
+    return {"ticket": ticket}
 
 
 @router.patch("/level", response_model=UserResponse)

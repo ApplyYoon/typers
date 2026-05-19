@@ -1,24 +1,28 @@
 /**
  * useBattleSocket — 실시간 배틀 WebSocket 훅
  *
- * 역할:
- *  - WebSocket 연결 수명 관리 (연결 → 재연결 → 해제)
- *  - 5초마다 heartbeat 전송 (서버 쪽 user:status TTL 갱신)
- *  - 수신 메시지를 onMessage 콜백으로 전달
- *  - send() 함수 노출 — 컴포넌트에서 서버로 메시지 전송
+ * 인증: /auth/ws-ticket 에서 단기 티켓을 발급받아 WS URL에 붙인다.
+ *   (Vite 프록시 환경에서 HttpOnly 쿠키가 WS 업그레이드 시 전달되지
+ *    않는 문제를 해결하는 표준 패턴)
  *
- * 설계 결정:
- *  - WebSocket URL은 현재 호스트 기반으로 자동 결정 (ws/wss)
- *  - 연결 끊김 시 3초 후 자동 재연결 (최대 5회)
- *  - cleanup: unmount 시 WebSocket.close(1000) 정상 종료
+ * 버퍼링: send()가 CONNECTING 상태에 호출되면 pendingRef에 쌓아두다
+ *   onopen 시 일괄 전송 → join_queue 타이밍 문제 해결
+ *
+ * 재연결: 비정상 종료 시 3초 후 자동 재연결 (최대 5회)
+ *   재연결마다 새 티켓을 발급하여 30초 만료 문제 방지
  */
 import { useEffect, useRef, useCallback } from 'react';
 import type { ClientMessage, ServerMessage } from '../api/battle';
+import { authApi } from '../api/auth';
 
-const WS_URL = (() => {
+const WS_BASE = (() => {
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const host  = window.location.host;
-  return `${proto}://${host}/api/ws/battle`;
+  // 개발: Vite 프록시의 WS 지원이 불안정하므로 백엔드 포트에 직접 연결
+  // 프로덕션: 같은 호스트의 /ws/battle (리버스 프록시가 처리)
+  if (import.meta.env.DEV) {
+    return `${proto}://localhost:8000/battle/ws/battle`;
+  }
+  return `${proto}://${window.location.host}/battle/ws/battle`;
 })();
 
 const HEARTBEAT_INTERVAL = 5_000;   // ms
@@ -27,32 +31,52 @@ const RETRY_DELAY        = 3_000;   // ms
 
 interface Options {
   onMessage: (msg: ServerMessage) => void;
-  enabled?: boolean;   // false이면 연결하지 않음
+  enabled?: boolean;
 }
 
 export function useBattleSocket({ onMessage, enabled = true }: Options) {
-  const wsRef       = useRef<WebSocket | null>(null);
-  const retriesRef  = useRef(0);
-  const mountedRef  = useRef(true);
-  const hbTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wsRef      = useRef<WebSocket | null>(null);
+  const retriesRef = useRef(0);
+  const mountedRef = useRef(true);
+  const hbTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // CONNECTING 상태에 호출된 메시지 버퍼
+  const pendingRef = useRef<ClientMessage[]>([]);
 
   const send = useCallback((msg: ClientMessage) => {
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg));
+    } else {
+      pendingRef.current.push(msg);
     }
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!mountedRef.current || !enabled) return;
 
-    const ws = new WebSocket(WS_URL);
+    // ① ws-ticket 발급 (30초 유효, 1회 사용)
+    let ticket: string;
+    try {
+      const res = await authApi.getWsTicket();
+      ticket = res.ticket;
+    } catch {
+      // 미로그인 또는 네트워크 오류 → 연결 포기
+      return;
+    }
+
+    if (!mountedRef.current) return;
+
+    const ws = new WebSocket(`${WS_BASE}?ticket=${ticket}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
       retriesRef.current = 0;
 
-      // 5초마다 heartbeat 전송
+      // 버퍼된 메시지 flush
+      const queued = pendingRef.current.splice(0);
+      queued.forEach(m => ws.send(JSON.stringify(m)));
+
+      // heartbeat 시작
       if (hbTimerRef.current) clearInterval(hbTimerRef.current);
       hbTimerRef.current = setInterval(() => {
         send({ type: 'heartbeat' });
@@ -63,25 +87,22 @@ export function useBattleSocket({ onMessage, enabled = true }: Options) {
       try {
         const msg = JSON.parse(ev.data) as ServerMessage;
         onMessage(msg);
-      } catch {
-        // 파싱 실패 무시
-      }
+      } catch { /* 파싱 오류 무시 */ }
     };
 
     ws.onclose = (ev) => {
       if (hbTimerRef.current) clearInterval(hbTimerRef.current);
-      // 정상 종료(code 1000, 4001 인증 실패)는 재연결 안 함
+      // 정상 종료 or 인증 실패 → 재연결 안 함
       if (!mountedRef.current || ev.code === 1000 || ev.code === 4001) return;
 
       if (retriesRef.current < MAX_RETRIES) {
         retriesRef.current += 1;
-        setTimeout(connect, RETRY_DELAY);
+        setTimeout(() => connect(), RETRY_DELAY);
       }
     };
 
-    ws.onerror = () => {
-      ws.close();
-    };
+    ws.onerror = () => ws.close();
+
   }, [enabled, onMessage, send]);
 
   useEffect(() => {
