@@ -9,6 +9,7 @@ const Navbar: React.FC = () => {
     { label: '학교대항전', path: '/battle' },
     { label: '타이핑', path: '/typing' },
     { label: '커스텀', path: '/custom' },
+    { label: '랭크전', path: '/real-battle' },
     { label: '랭킹', path: '/ranking' },
   ];
 

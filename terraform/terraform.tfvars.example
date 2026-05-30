@@ -1,0 +1,13 @@
+# terraform.tfvars.example → terraform.tfvars 로 복사 후 값 채우기
+# terraform.tfvars 는 .gitignore 처리됨 (시크릿 포함)
+
+# PostgreSQL 비밀번호 (RDS 생성 시 설정됨)
+db_password = "strong-random-password-here"
+
+# JWT 서명 시크릿 (최소 32자)
+# 생성: python -c "import secrets; print(secrets.token_hex(32))"
+secret_key = "your-32-char-random-hex-string-here"
+
+# Upstash Redis URL
+# upstash.com → Redis 생성 → .NET 탭 말고 일반 URL 복사
+redis_url = "rediss://default:YOUR_TOKEN@YOUR_ENDPOINT.upstash.io:6379"

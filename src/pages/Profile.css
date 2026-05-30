@@ -257,3 +257,23 @@
   padding: 40px;
   font-size: 14px;
 }
+
+/* Logout button */
+.profile-logout-btn {
+  margin-top: 16px;
+  padding: 8px 20px;
+  background: transparent;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+  align-self: flex-start;
+}
+
+.profile-logout-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}

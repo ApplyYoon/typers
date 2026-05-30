@@ -22,4 +22,7 @@ export const authApi = {
 
   updateLevel: (level: number, initial_cpm: number) =>
     api.patch<UserResponse>('/auth/level', { level, initial_cpm }),
+
+  /** WebSocket 연결용 단기 티켓 (30초, 1회 사용) */
+  getWsTicket: () => api.get<{ ticket: string }>('/auth/ws-ticket'),
 };

@@ -6,8 +6,12 @@ export class ApiError extends Error {
   }
 }
 
+// 개발: Vite 프록시(/api → localhost:8000)
+// 프로덕션: VITE_API_BASE_URL=https://api.yourdomain.com (빌드 시 번들에 포함)
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api';
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     credentials: 'include', // HttpOnly 쿠키 자동 전송
     headers: {

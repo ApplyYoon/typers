@@ -108,18 +108,37 @@ async def _mark_done(r: aioredis.Redis, room_id: str, uid: str, cpm: int, acc: i
 
 async def _auth_ws(ws: WebSocket) -> User | None:
     """
-    WebSocket에서는 Depends(get_current_user)를 쓸 수 없으므로
-    쿠키를 직접 파싱한다.
+    WebSocket 인증 — 두 가지 방식 지원:
+
+    1. HttpOnly 쿠키 (access_token): 직접 접속 시
+    2. ws-ticket 쿼리 파라미터: Vite 프록시 등 쿠키 전달 불가 환경
+       - /auth/ws-ticket 에서 발급한 UUID를 ?ticket=<uuid> 로 전달
+       - Redis에서 1회 조회 후 즉시 삭제 (GETDEL)
     """
+    uid: uuid.UUID | None = None
+
+    # ① 쿠키 방식
     token = ws.cookies.get("access_token")
-    if not token:
-        return None
-    user_id_str = decode_token(token)
-    if not user_id_str:
-        return None
-    try:
-        uid = uuid.UUID(user_id_str)
-    except ValueError:
+    if token:
+        user_id_str = decode_token(token)
+        if user_id_str:
+            try:
+                uid = uuid.UUID(user_id_str)
+            except ValueError:
+                pass
+
+    # ② ws-ticket 방식 (쿠키 없거나 파싱 실패 시)
+    if uid is None:
+        ticket = ws.query_params.get("ticket")
+        if ticket:
+            try:
+                r = get_redis()
+                stored = await r.getdel(f"ws_ticket:{ticket}")
+                if stored:
+                    uid = uuid.UUID(stored)
+            except Exception as e:
+                log.warning("[auth_ws] ticket 검증 실패: %s", e)
+    if uid is None:
         return None
 
     async with AsyncSessionLocal() as db:

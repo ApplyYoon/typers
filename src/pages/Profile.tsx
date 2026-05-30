@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar,
@@ -23,7 +24,8 @@ type ChartRange = '1주' | '1달' | '3달';
 const RANGE_DAYS: Record<ChartRange, number> = { '1주': 7, '1달': 30, '3달': 90 };
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats]   = useState<StatsResponse | null>(null);
   const [range, setRange]   = useState<ChartRange>('1주');
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,11 @@ const Profile: React.FC = () => {
   const goalCpm  = LEVEL_CPM_GOAL[level];
   const bestCpm  = stats?.best_cpm ?? user.initial_cpm;
   const xpPct    = level >= 4 ? 100 : Math.min((bestCpm / goalCpm) * 100, 100);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   const cpmData = stats?.daily.map(d => ({
     date: d.date.slice(5),   // MM-DD
@@ -107,6 +114,10 @@ const Profile: React.FC = () => {
                 <span className="profile-mini-label">시작 CPM</span>
               </div>
             </div>
+
+            <button className="profile-logout-btn" onClick={handleLogout}>
+              로그아웃
+            </button>
           </div>
         </div>
 

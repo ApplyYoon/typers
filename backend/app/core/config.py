@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7일
 
-    ANTHROPIC_API_KEY: str = ""
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5175"
+
+    # HTTPS 환경(프로덕션)에서 True — secure 쿠키 + SameSite=None 활성화
+    HTTPS: bool = False
 
     @model_validator(mode="after")
     def validate_secret_key(self) -> "Settings":

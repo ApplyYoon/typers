@@ -56,3 +56,10 @@ __pycache__/
 # Misc
 .cache/
 .parcel-cache/
+
+# Terraform — 시크릿 포함 파일 및 로컬 캐시
+terraform/terraform.tfvars
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
