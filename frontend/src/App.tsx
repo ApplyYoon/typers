@@ -10,7 +10,7 @@ import Profile from './pages/Profile';
 import Custom from './pages/Custom';
 import Typing from './pages/Typing';
 import Battle from './pages/Battle';
-import RealBattle from './pages/RealBattle';
+import RankBattle from './pages/RankBattle';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
 import './styles/global.css';
@@ -39,7 +39,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/custom"    element={<Layout><Custom /></Layout>} />
     <Route path="/typing"    element={<Layout><Typing /></Layout>} />
     <Route path="/battle"      element={<Layout><Battle /></Layout>} />
-    <Route path="/real-battle" element={<Layout><RealBattle /></Layout>} />
+    <Route path="/real-battle" element={<Layout><RankBattle /></Layout>} />
     <Route path="/home"        element={<Layout><Home /></Layout>} />
   </Routes>
 );

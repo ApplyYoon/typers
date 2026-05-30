@@ -12,10 +12,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
+# 프론트엔드 (frontend/ 에서 실행)
+cd frontend
 npm run dev       # Start Vite dev server (HMR)
 npm run build     # tsc -b && vite build
 npm run lint      # ESLint
 npm run preview   # Serve built dist locally
+
+# 백엔드 (루트에서 실행)
+docker-compose up  # FastAPI + PostgreSQL + Redis
 ```
 
 No test suite is configured.
@@ -95,7 +100,7 @@ App.tsx (BrowserRouter)
 
 `Battle/index.tsx`가 `step` state로 3단계 플로우(SchoolSelect → BattleArena → BattleResult)를 오케스트레이션.
 
-### Core Utilities (`src/utils/`)
+### Core Utilities (`frontend/src/utils/`)
 
 | File | Purpose |
 |------|---------|

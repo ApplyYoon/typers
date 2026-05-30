@@ -1,5 +1,5 @@
 /**
- * RealBattleResult — 배틀 종료 결과 화면
+ * RankBattleResult — 배틀 종료 결과 화면
  *
  * 표시 정보:
  *  - 승/패/무승부 판정
@@ -19,7 +19,7 @@ interface Props {
   onLobby:      () => void;
 }
 
-const RealBattleResult: React.FC<Props> = ({
+const RankBattleResult: React.FC<Props> = ({
   result, myUserId, myName, oppName, onRematch, onLobby,
 }) => {
   const isWin  = result.winner_id === myUserId;
@@ -98,4 +98,4 @@ const RealBattleResult: React.FC<Props> = ({
   );
 };
 
-export default RealBattleResult;
+export default RankBattleResult;
