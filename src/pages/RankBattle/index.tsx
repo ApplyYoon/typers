@@ -1,5 +1,5 @@
 /**
- * RealBattle — 실시간 배틀 오케스트레이터
+ * RankBattle — 실시간 배틀 오케스트레이터
  *
  * 단계 흐름:
  *  lobby → matching → battle → result
@@ -17,8 +17,8 @@ import type { ServerMessage, S_GameEnd, S_Matched } from '../../api/battle';
 import Lobby from './Lobby';
 import Matching from './Matching';
 import BattleRoom from './BattleRoom';
-import RealBattleResult from './RealBattleResult';
-import './RealBattle.css';
+import RankBattleResult from './RankBattleResult';
+import './RankBattle.css';
 
 type Step = 'lobby' | 'matching' | 'battle' | 'result';
 
@@ -28,7 +28,7 @@ interface OppProgress {
   correct_chars: number;
 }
 
-const RealBattle: React.FC = () => {
+const RankBattle: React.FC = () => {
   const { user } = useAuth();
 
   const [step, setStep]             = useState<Step>('lobby');
@@ -178,7 +178,7 @@ const RealBattle: React.FC = () => {
       )}
 
       {step === 'result' && gameResult && (
-        <RealBattleResult
+        <RankBattleResult
           result={gameResult}
           myUserId={user?.id ? String(user.id) : ''}
           myName={user?.username ?? '나'}
@@ -191,4 +191,4 @@ const RealBattle: React.FC = () => {
   );
 };
 
-export default RealBattle;
+export default RankBattle;
