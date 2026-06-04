@@ -58,71 +58,65 @@ const IntroOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 /* ── Hero Typing Demo ───────────────────────────────────── */
 const HERO_TEXT = '목표 타수, 가이드와 동기부여로 달성한다';
 
-const HeroTypingDemo: React.FC<{ onScrollToTry: () => void }> = ({ onScrollToTry }) => {
-  const [done, setDone] = useState(false);
-
-  return (
-    <TypingSession
-      text={HERO_TEXT}
-      active={!done}
-      onComplete={() => { setDone(true); setTimeout(onScrollToTry, 500); }}
-      className="hero-td"
-    >
-      <TypingSession.Input />
-      <div className="hero-td-header">
-        <span className="hero-td-label">클릭하고 타이핑해보세요 ↓</span>
-        <TypingSession.Stats className="hero-td-stats" />
-      </div>
-      <div className="hero-td-character">
-        <TypingSession.Character className="hero-td-char-img" />
-      </div>
-      <TypingSession.Text isKorean className="hero-td-text" />
-      <button
-        className="hero-td-scroll"
-        onClick={e => { e.stopPropagation(); onScrollToTry(); }}
-      >
-        더 연습해보기 ↓
-      </button>
-    </TypingSession>
-  );
-};
+const HeroTypingDemo: React.FC<{ onScrollToTry: () => void }> = ({ onScrollToTry }) => (
+  <div className="hero-td hero-td-preview" onClick={onScrollToTry}>
+    <div className="hero-td-preview-top">
+      <img src="/typing/character_typing_1-1.png" alt="character" className="hero-td-preview-char" />
+      <span className="hero-td-label">클릭해서 타이핑해보세요</span>
+    </div>
+    <div className="hero-td-text">
+      <span className="hero-td-cursor"> </span>
+      <span style={{ color: '#d1d5db' }}>{HERO_TEXT}</span>
+    </div>
+  </div>
+);
 
 /* ── Try Section ────────────────────────────────────────── */
 const TRY_SENTENCES = [
   '자격증 시험까지 한 달, 타수가 걱정되셨나요?',
-  '매일 20분, 목표를 향해 꾸준히 나아가요.',
-  '오늘의 연습이 내일의 타수가 됩니다.',
 ];
 
 const TrySentence: React.FC<{
   text: string;
-  onComplete: () => void;
-}> = ({ text, onComplete }) => (
-  <TypingSession text={text} active onComplete={onComplete}>
-    <TypingSession.Input />
-    <div className="try-char-row">
-      <TypingSession.Character className="try-char-img" />
-      <TypingSession.Text isKorean className="try-sentence" />
-    </div>
-    <div className="try-stats">
-      <TypingSession.Stats
-        className="try-stat"
-        hint="클릭하고 타이핑 시작"
-      />
-    </div>
-  </TypingSession>
-);
+  onComplete: (cpm: number) => void;
+}> = ({ text, onComplete }) => {
+  const lastCpmRef = useRef(0);
+  return (
+    <TypingSession
+      text={text}
+      active
+      onComplete={() => onComplete(lastCpmRef.current)}
+      onStatsChange={cpm => { lastCpmRef.current = cpm; }}
+    >
+      <TypingSession.Input />
+      <div className="try-char-row">
+        <TypingSession.Character className="try-char-img" />
+        <TypingSession.Text isKorean className="try-sentence" />
+      </div>
+      <div className="try-stats">
+        <TypingSession.Stats className="try-stat" hint="클릭하고 타이핑 시작" />
+      </div>
+    </TypingSession>
+  );
+};
 
-const TrySection = React.forwardRef<HTMLElement, { onStart: () => void }>(
-  ({ onStart }, ref) => {
+const TrySection = React.forwardRef<HTMLElement, {
+  onStart: () => void;
+  onDone: (cpm: number) => void;
+}>(
+  ({ onStart, onDone }, ref) => {
     const [sentenceIdx, setSentenceIdx] = useState(0);
     const [done, setDone]               = useState(false);
-    const handleSentenceComplete = () => {
+    const [finalCpm, setFinalCpm]       = useState(0);
+
+    const handleSentenceComplete = (cpm: number) => {
       const next = sentenceIdx + 1;
       if (next < TRY_SENTENCES.length) {
         setTimeout(() => setSentenceIdx(next), 400);
       } else {
+        setFinalCpm(cpm);
         setDone(true);
+        onDone(cpm);
       }
     };
 
@@ -134,19 +128,25 @@ const TrySection = React.forwardRef<HTMLElement, { onStart: () => void }>(
           <div className="l-section-eyebrow">직접 체험해보세요</div>
           <h2 className="l-try-title">지금 바로 타이핑해봐요</h2>
           <div className="try-box">
-            <div className="try-progress-bar">
-              <div className="try-progress-fill" style={{ width: `${done ? 100 : progress}%` }} />
-            </div>
+            {TRY_SENTENCES.length > 1 && (
+              <div className="try-progress-bar">
+                <div className="try-progress-fill" style={{ width: `${done ? 100 : progress}%` }} />
+              </div>
+            )}
             {done ? (
               <div className="try-done">
-                <div className="try-done-sub">완료! 회원가입하고 목표를 설정해봐요</div>
-                <button className="l-btn-primary" style={{ marginTop: 20 }} onClick={onStart}>
-                  무료로 시작하기 →
-                </button>
+                <div className="try-done-cpm">{finalCpm} <small>타/분</small></div>
+                <div className="try-done-sub">내 타수가 플랜 계산기에 반영됐어요 ↓</div>
+                <div style={{ display: 'flex', gap: 12, marginTop: 20, justifyContent: 'center' }}>
+                  <button className="l-btn-primary" onClick={onStart}>무료로 시작하기 →</button>
+                  <button className="l-btn-ghost" onClick={() => { setDone(false); setSentenceIdx(0); }}>다시 측정</button>
+                </div>
               </div>
             ) : (
               <>
-                <div className="try-idx">{sentenceIdx + 1} / {TRY_SENTENCES.length}</div>
+                {TRY_SENTENCES.length > 1 && (
+                  <div className="try-idx">{sentenceIdx + 1} / {TRY_SENTENCES.length}</div>
+                )}
                 <TrySentence
                   key={sentenceIdx}
                   text={TRY_SENTENCES[sentenceIdx]}
@@ -170,8 +170,12 @@ const CERT_PRESETS = [
 ];
 const WEEK_OPTIONS = [2, 4, 8];
 
-const PlanCalculator: React.FC = () => {
-  const [currentCpm, setCurrentCpm]   = useState(150);
+const PlanCalculator: React.FC<{ initialCpm?: number }> = ({ initialCpm }) => {
+  const [currentCpm, setCurrentCpm]   = useState(initialCpm ?? 150);
+
+  useEffect(() => {
+    if (initialCpm && initialCpm > 0) setCurrentCpm(initialCpm);
+  }, [initialCpm]);
   const [customTarget, setCustomTarget] = useState('');
   const [selectedPreset, setSelectedPreset] = useState(1);
   const [weeks, setWeeks] = useState(4);
@@ -289,10 +293,19 @@ const Landing: React.FC = () => {
   const [heroVisible,   setHeroVisible]   = useState(false);
   const [planRef,  planInView]  = useInView(0.2);
   const [ctaRef,   ctaInView]   = useInView(0.2);
-  const tryRef = useRef<HTMLElement>(null);
+  const tryRef  = useRef<HTMLElement>(null);
+  const planElemRef = useRef<HTMLElement | null>(null);
+  const [tryCpm, setTryCpm] = useState<number>(0);
 
   const scrollToTry = () => {
-    tryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    tryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleTryDone = (cpm: number) => {
+    setTryCpm(cpm);
+    setTimeout(() => {
+      planElemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 600);
   };
 
   useEffect(() => {
@@ -356,11 +369,11 @@ const Landing: React.FC = () => {
       </section>
 
       {/* ── Try Section ── */}
-      <TrySection ref={tryRef} onStart={handleStart} />
+      <TrySection ref={tryRef} onStart={handleStart} onDone={handleTryDone} />
 
       {/* ── 2nd fold · Plan Demo ── */}
       <section
-        ref={planRef as React.Ref<HTMLElement>}
+        ref={el => { (planRef as React.MutableRefObject<HTMLElement | null>).current = el; planElemRef.current = el; }}
         className={`l-plan${planInView ? ' l-plan-visible' : ''}`}
       >
         <div className="l-plan-inner">
@@ -372,7 +385,7 @@ const Landing: React.FC = () => {
           <p className="l-plan-sub">
             다른 앱은 목표를 설정할 수 있지만, 거기까지 어떻게 가야 하는지는 알려주지 않아요.
           </p>
-          <PlanCalculator />
+          <PlanCalculator initialCpm={tryCpm > 0 ? tryCpm : undefined} />
         </div>
       </section>
 

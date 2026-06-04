@@ -625,9 +625,9 @@
 }
 
 .hero-td-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--lsub);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lprimary);
   letter-spacing: 0.02em;
 }
 
@@ -637,7 +637,7 @@
 .hero-td-acc { font-size: 12px; color: var(--lsub); }
 
 .hero-td-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.6;
   letter-spacing: -0.3px;
@@ -646,7 +646,8 @@
   border: 2px solid var(--lborder);
   border-radius: 10px;
   transition: border-color 150ms var(--ease);
-  min-height: 72px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .hero-td-text.hero-td-focused { border-color: var(--lprimary); }
 
@@ -659,14 +660,17 @@
   animation: l-blink 0.9s step-end infinite;
 }
 
-.hero-td-character {
+.hero-td-preview-top {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
 }
-.hero-td-char-img {
-  width: 80px;
-  height: 80px;
+.hero-td-preview-char {
+  width: 36px;
+  height: 36px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .try-char-row {
@@ -680,6 +684,28 @@
   height: 72px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+/* char-cursor와 동일한 스타일 */
+.hero-td-cursor {
+  color: #d1d5db;
+  border-left: 2.5px solid var(--lprimary);
+  animation: blink 0.9s step-end infinite;
+}
+
+.hero-td-preview {
+  cursor: pointer;
+  animation: hero-td-pulse 2.5s ease-in-out infinite;
+}
+.hero-td-preview:hover {
+  border-color: var(--lprimary);
+  animation: none;
+  box-shadow: 0 8px 40px rgba(135,88,255,0.18), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+@keyframes hero-td-pulse {
+  0%, 100% { border-color: var(--lborder); box-shadow: 0 8px 40px rgba(0,0,0,0.10); }
+  50%       { border-color: var(--lprimary); box-shadow: 0 8px 40px rgba(135,88,255,0.15); }
 }
 
 .hero-td-scroll {
