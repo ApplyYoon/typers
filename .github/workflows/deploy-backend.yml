@@ -10,18 +10,7 @@ on:
 
 concurrency:
   group: deploy-backend
-  cancel-in-progress: false  # 진행 중인 배포는 취소하지 않고 대기
-
-permissions:
-  id-token: write   # OIDC 토큰 발급에 필요
-  contents: read
-
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REGISTRY: 541673202749.dkr.ecr.ap-northeast-2.amazonaws.com
-  ECR_REPOSITORY: typers-api
-  ECS_CLUSTER: typers-cluster
-  ECS_SERVICE: typers-api
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -31,37 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::541673202749:role/typers-github-actions
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build & Push Docker image
-        run: |
-          SHA=${{ github.sha }}
-          docker build --platform linux/amd64 \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHA \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-            ./backend
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHA
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment \
-            --region $AWS_REGION
-
-      - name: Wait for deployment to stabilize
-        timeout-minutes: 20
-        run: |
-          aws ecs wait services-stable \
-            --cluster $ECS_CLUSTER \
-            --services $ECS_SERVICE \
-            --region $AWS_REGION
+      - name: Deploy to Fly.io
+        working-directory: backend
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
