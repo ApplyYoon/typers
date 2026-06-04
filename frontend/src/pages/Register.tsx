@@ -11,7 +11,10 @@ const Register: React.FC = () => {
   const [step, setStep]         = useState<Step>(1);
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm]   = useState('');
   const [username, setUsername] = useState('');
+  const [showPw, setShowPw]     = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
@@ -30,6 +33,9 @@ const Register: React.FC = () => {
     } else if (step === 2) {
       if (!pwHasLetter || !pwHasNumOrSp || !pwLongEnough) {
         setError('비밀번호 조건을 확인해주세요'); return;
+      }
+      if (password !== confirm) {
+        setError('비밀번호가 일치하지 않습니다'); return;
       }
       setStep(3);
     } else {
@@ -129,22 +135,44 @@ const Register: React.FC = () => {
 
         <form onSubmit={handleNext} className="auth-form">
           {step === 2 && (
-            <div className="auth-field">
-              <label className="auth-label">비밀번호</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="auth-input"
-                autoFocus
-                required
-              />
-              <ul className="auth-pw-rules">
-                <li className={pwHasLetter ? 'rule-ok' : ''}>문자 1개 이상</li>
-                <li className={pwHasNumOrSp ? 'rule-ok' : ''}>숫자 또는 특수문자 1개 이상</li>
-                <li className={pwLongEnough ? 'rule-ok' : ''}>8자 이상</li>
-              </ul>
-            </div>
+            <>
+              <div className="auth-field">
+                <label className="auth-label">비밀번호</label>
+                <div className="auth-input-wrap">
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="auth-input"
+                    autoFocus
+                    required
+                  />
+                  <button type="button" className="auth-eye-btn" onClick={() => setShowPw(v => !v)}>
+                    {showPw ? '🙈' : '👁'}
+                  </button>
+                </div>
+                <ul className="auth-pw-rules">
+                  <li className={pwHasLetter ? 'rule-ok' : ''}>문자 1개 이상</li>
+                  <li className={pwHasNumOrSp ? 'rule-ok' : ''}>숫자 또는 특수문자 1개 이상</li>
+                  <li className={pwLongEnough ? 'rule-ok' : ''}>8자 이상</li>
+                </ul>
+              </div>
+              <div className="auth-field">
+                <label className="auth-label">비밀번호 확인</label>
+                <div className="auth-input-wrap">
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    value={confirm}
+                    onChange={e => setConfirm(e.target.value)}
+                    className="auth-input"
+                    required
+                  />
+                  <button type="button" className="auth-eye-btn" onClick={() => setShowConfirm(v => !v)}>
+                    {showConfirm ? '🙈' : '👁'}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
 
           {step === 3 && (

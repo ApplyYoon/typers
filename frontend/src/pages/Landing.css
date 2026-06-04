@@ -1035,6 +1035,27 @@
   margin-left: 4px;
 }
 
+/* ── Plan CTA ────────────────────────────────────────────── */
+.plan-cta {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--lborder);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.plan-cta-sub {
+  font-size: 14px;
+  color: var(--lsub);
+  margin: 0;
+}
+.plan-cta-btn {
+  white-space: nowrap;
+  padding: 12px 28px;
+}
+
 /* ── CTA section ─────────────────────────────────────────── */
 .l-cta {
   max-width: 1080px;

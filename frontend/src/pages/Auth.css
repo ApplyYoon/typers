@@ -76,6 +76,28 @@
 .auth-input::placeholder { color: #9CA3AF; }
 .auth-input:focus { border-color: #8758FF; }
 
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.auth-input-wrap .auth-input {
+  padding-right: 44px;
+}
+.auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+}
+.auth-eye-btn:hover { opacity: 1; }
+
 .auth-error {
   font-size: 13px;
   color: #ef4444;

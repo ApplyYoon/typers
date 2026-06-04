@@ -170,7 +170,7 @@ const CERT_PRESETS = [
 ];
 const WEEK_OPTIONS = [2, 4, 8];
 
-const PlanCalculator: React.FC<{ initialCpm?: number }> = ({ initialCpm }) => {
+const PlanCalculator: React.FC<{ initialCpm?: number; onStart?: () => void }> = ({ initialCpm, onStart }) => {
   const [currentCpm, setCurrentCpm]   = useState(initialCpm ?? 150);
 
   useEffect(() => {
@@ -264,6 +264,14 @@ const PlanCalculator: React.FC<{ initialCpm?: number }> = ({ initialCpm }) => {
           </>
         )}
       </div>
+      {onStart && (
+        <div className="plan-cta">
+          <p className="plan-cta-sub">플랜이 완성됐어요. 지금 시작해볼까요?</p>
+          <button className="l-btn-primary plan-cta-btn" onClick={onStart}>
+            무료로 시작하기 →
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -385,7 +393,10 @@ const Landing: React.FC = () => {
           <p className="l-plan-sub">
             다른 앱은 목표를 설정할 수 있지만, 거기까지 어떻게 가야 하는지는 알려주지 않아요.
           </p>
-          <PlanCalculator initialCpm={tryCpm > 0 ? tryCpm : undefined} />
+          <PlanCalculator
+            initialCpm={tryCpm > 0 ? tryCpm : undefined}
+            onStart={tryCpm > 0 ? handleStart : undefined}
+          />
         </div>
       </section>
 
