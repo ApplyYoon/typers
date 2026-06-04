@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getPracticeText, getTextFromWords, MODE_META, type TypingMode } from '../data/texts';
-import { useTypingEngine } from '../hooks/useTypingEngine';
-import TypingText from '../components/TypingText';
+import TypingSession, { type TypingSessionHandle } from '../components/TypingSession';
 import { savePracticeSession, getActivityData } from '../utils/practiceStorage';
 import { useAuth } from '../context/AuthContext';
 import { practiceApi } from '../api/practice';
@@ -64,7 +63,8 @@ const Typing: React.FC = () => {
   const [countdown, setCountdown] = useState(3);
   const [timeLeft, setTimeLeft]   = useState(60);
   const [text, setText]           = useState(() => getPracticeText('short', 'ko'));
-  const [liveCpm, setLiveCpm]     = useState(0);
+  const [liveCpm, setLiveCpm]       = useState(0);
+  const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [result, setResult]       = useState<SessionResult | null>(null);
   const [chartData, setChartData] = useState(() => getActivityData());
 
@@ -74,7 +74,8 @@ const Typing: React.FC = () => {
   const modeRef          = useRef<TypingMode>('short');
   const sentencesDoneRef = useRef(0);
   const durationRef      = useRef(60);
-  const userRef          = useRef(user); // doFinish의 deps를 [] 유지하면서 최신 user 접근
+  const userRef          = useRef(user);
+  const sessionRef       = useRef<TypingSessionHandle>(null);
 
   useEffect(() => { langRef.current     = lang;     }, [lang]);
   useEffect(() => { modeRef.current     = mode;     }, [mode]);
@@ -91,30 +92,12 @@ const Typing: React.FC = () => {
     setText(cd ? getTextFromWords(cd.words) : getPracticeText(modeRef.current, langRef.current));
   }, []);
 
-  const {
-    inputRef,
-    handleKeyDown,
-    getSyllableDisplay,
-    totalCorrect,
-    totalTyped,
-    accuracy,
-    frame,
-    getErrorLog,
-    reset,
-    getScore,
-  } = useTypingEngine({ text, active: phase === 'playing', onComplete: handleComplete });
-
-  const getScoreRef    = useRef(getScore);
-  const getErrorLogRef = useRef(getErrorLog);
-  getScoreRef.current    = getScore;
-  getErrorLogRef.current = getErrorLog;
-
   // ── 세션 종료 처리 ────────────────────────────────────────
   const doFinish = useCallback(() => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    const { cpm, accuracy: acc } = getScoreRef.current(startTimeRef.current);
-    const topErrors = Object.entries(getErrorLogRef.current())
+    const { cpm, accuracy: acc } = sessionRef.current!.getScore(startTimeRef.current);
+    const topErrors = Object.entries(sessionRef.current!.getErrorLog())
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([jamo, count]) => ({ jamo, count }));
@@ -142,7 +125,7 @@ const Typing: React.FC = () => {
         accuracy:  acc,
         duration:  durationRef.current,
         sentences: sentencesDoneRef.current,
-        error_log: getErrorLogRef.current(),
+        error_log: sessionRef.current!.getErrorLog(),
       }).catch(() => {/* 네트워크 오류 무시 */});
     }
   }, []);
@@ -153,12 +136,12 @@ const Typing: React.FC = () => {
     if (countdown <= 0) {
       setPhase('playing');
       startTimeRef.current = Date.now();
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => sessionRef.current?.focus(), 50);
       return;
     }
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, countdown, inputRef]);
+  }, [phase, countdown]);
 
   // ── 타이머 ───────────────────────────────────────────────
   useEffect(() => {
@@ -167,14 +150,6 @@ const Typing: React.FC = () => {
     const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft, doFinish]);
-
-  // ── 실시간 CPM ───────────────────────────────────────────
-  useEffect(() => {
-    if (!startTimeRef.current) return;
-    const elapsed = (Date.now() - startTimeRef.current) / 60000;
-    if (elapsed < 0.01) return;
-    setLiveCpm(Math.round(totalCorrect / elapsed));
-  }, [totalCorrect]);
 
   // ── 모드 전환 ─────────────────────────────────────────────
   const handleModeChange = useCallback((m: TypingMode) => {
@@ -192,7 +167,6 @@ const Typing: React.FC = () => {
   // ── 시작 ─────────────────────────────────────────────────
   const handleStart = useCallback(() => {
     const secs = MODE_META[mode].hasTimer ? duration : 60;
-    reset();
     const cd = customDictRef.current;
     setText(cd ? getTextFromWords(cd.words) : getPracticeText(mode, lang));
     sentencesDoneRef.current = 0;
@@ -203,7 +177,7 @@ const Typing: React.FC = () => {
     startTimeRef.current = 0;
     setResult(null);
     setPhase('countdown');
-  }, [reset, mode, lang, duration]);
+  }, [mode, lang, duration]);
 
   const handleRestart = useCallback(() => {
     setPhase('idle');
@@ -218,10 +192,8 @@ const Typing: React.FC = () => {
 
   const meta    = MODE_META[mode];
   const seconds = meta.hasTimer ? duration : 60;
-  const timerPct  = (timeLeft / seconds) * 100;
-  const isKo      = lang === 'ko';
-  const charLevel = liveCpm >= 400 ? 3 : liveCpm >= 200 ? 2 : 1;
-  const charSrc   = `/typing/character_typing_${charLevel}-${frame}.png`;
+  const timerPct = (timeLeft / seconds) * 100;
+  const isKo     = lang === 'ko';
 
   /* ── 렌더 ─────────────────────────────────────────────── */
   return (
@@ -341,33 +313,23 @@ const Typing: React.FC = () => {
                 </div>
                 <div className="playing-stat">
                   <span className="playing-stat-label">정확도</span>
-                  <span className="playing-stat-value">{totalTyped > 0 ? accuracy : 100}%</span>
+                  <span className="playing-stat-value">{liveAccuracy}%</span>
                 </div>
               </div>
 
-              {/* 캐릭터 */}
-              <div className="playing-character">
-                <img src={charSrc} alt="character" className="playing-character-img" />
-              </div>
-
-              <TypingText
+              <TypingSession
+                ref={sessionRef}
                 text={text}
-                getSyllableDisplay={getSyllableDisplay}
-                isKorean={isKo}
-                className="arena-text"
-                onClick={() => inputRef.current?.focus()}
-              />
-
-              <input
-                ref={inputRef}
-                className="arena-input-hidden"
-                onKeyDown={handleKeyDown}
-                readOnly
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-              />
+                active={phase === 'playing'}
+                onComplete={handleComplete}
+                onStatsChange={(cpm, acc) => { setLiveCpm(cpm); setLiveAccuracy(acc); }}
+              >
+                <div className="playing-character">
+                  <TypingSession.Character className="playing-character-img" />
+                </div>
+                <TypingSession.Text isKorean={isKo} className="arena-text" />
+                <TypingSession.Input />
+              </TypingSession>
             </div>
           )}
 

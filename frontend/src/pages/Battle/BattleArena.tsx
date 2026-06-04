@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getRandomText, type Lang } from '../../data/texts';
-import { useTypingEngine } from '../../hooks/useTypingEngine';
-import TypingText from '../../components/TypingText';
+import TypingSession, { type TypingSessionHandle } from '../../components/TypingSession';
 
 interface Props {
   lang: Lang;
@@ -26,35 +25,24 @@ const BattleArena: React.FC<Props> = ({ lang, onFinish }) => {
   const [started, setStarted]     = useState(false);
   const [timeLeft, setTimeLeft]   = useState(TOTAL);
   const [text, setText]           = useState(() => getRandomText(lang === 'mixed' ? 'ko' : lang));
-  const [liveCpm, setLiveCpm]     = useState(0);
+  const [liveCpm, setLiveCpm]       = useState(0);
+  const [liveAccuracy, setLiveAccuracy] = useState(100);
 
   const startTimeRef  = useRef<number>(0);
   const finishedRef   = useRef(false);
   const phaseRef      = useRef<Phase>(getPhase(TOTAL, lang));
+  const sessionRef    = useRef<TypingSessionHandle>(null);
 
-  // 문장 완료 시 다음 텍스트로 교체
   const handleComplete = useCallback(() => {
     const nextLang = phaseRef.current === 'english' ? 'en' : 'ko';
     setText(getRandomText(nextLang));
   }, []);
-
-  // 타이핑 엔진
-  const {
-    inputRef,
-    handleKeyDown,
-    getSyllableDisplay,
-    totalCorrect,
-    accuracy,
-    frame,
-    getScore,
-  } = useTypingEngine({ text, active: started, onComplete: handleComplete });
 
   // ── 카운트다운 ──────────────────────────────────────────────
   useEffect(() => {
     if (countdown <= 0) {
       setStarted(true);
       startTimeRef.current = Date.now();
-      setTimeout(() => inputRef.current?.focus(), 50);
       return;
     }
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -73,39 +61,25 @@ const BattleArena: React.FC<Props> = ({ lang, onFinish }) => {
   useEffect(() => {
     if (!started) return;
     const phase = getPhase(timeLeft, lang);
-
     if (phase === 'transition' && phaseRef.current === 'korean') {
       phaseRef.current = 'transition';
     }
-
     if (phase === 'english' && phaseRef.current === 'transition') {
       phaseRef.current = 'english';
       setText(getRandomText('en'));
-      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [timeLeft, started, lang]);
-
-  // ── 실시간 CPM ──────────────────────────────────────────────
-  useEffect(() => {
-    if (!startTimeRef.current) return;
-    const elapsed = (Date.now() - startTimeRef.current) / 1000 / 60;
-    if (elapsed < 0.01) return;
-    setLiveCpm(Math.round(totalCorrect / elapsed));
-  }, [totalCorrect]);
 
   // ── 종료 ────────────────────────────────────────────────────
   const doFinish = useCallback(() => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    const { cpm, accuracy: acc } = getScore(startTimeRef.current);
+    const { cpm, accuracy: acc } = sessionRef.current!.getScore(startTimeRef.current);
     onFinish(cpm, acc);
-  }, [getScore, onFinish]);
+  }, [onFinish]);
 
-  // ── 렌더 파생값 ─────────────────────────────────────────────
   const phase      = getPhase(timeLeft, lang);
   const timerPct   = (timeLeft / TOTAL) * 100;
-  const charLevel  = liveCpm >= 400 ? 3 : liveCpm >= 200 ? 2 : 1;
-  const charSrc    = `/typing/character_typing_${charLevel}-${frame}.png`;
   const timerColor = timeLeft > KO_END ? '#7c3aed' : timeLeft > TRANS_END ? '#f59e0b' : '#10b981';
   const transCount = timeLeft - TRANS_END;
 
@@ -150,7 +124,7 @@ const BattleArena: React.FC<Props> = ({ lang, onFinish }) => {
           </div>
           <div className="arena-stat">
             <span className="arena-stat-label">정확도</span>
-            <span className="arena-stat-value">{accuracy}%</span>
+            <span className="arena-stat-value">{liveAccuracy}%</span>
           </div>
         </div>
         <div className="arena-transition">
@@ -187,7 +161,7 @@ const BattleArena: React.FC<Props> = ({ lang, onFinish }) => {
         </div>
         <div className="arena-stat">
           <span className="arena-stat-label">정확도</span>
-          <span className="arena-stat-value">{accuracy}%</span>
+          <span className="arena-stat-value">--</span>
         </div>
       </div>
 
@@ -198,28 +172,22 @@ const BattleArena: React.FC<Props> = ({ lang, onFinish }) => {
         </div>
       )}
 
-      <div className="arena-character">
-        <img src={charSrc} alt="character" className="arena-character-img" />
-      </div>
-
-      <TypingText
+      <TypingSession
+        ref={sessionRef}
         text={text}
-        getSyllableDisplay={getSyllableDisplay}
-        isKorean={phase === 'korean'}
-        className="arena-text"
-        onClick={() => inputRef.current?.focus()}
-      />
-
-      <input
-        ref={inputRef}
-        className="arena-input-hidden"
-        onKeyDown={handleKeyDown}
-        readOnly
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-      />
+        active={started}
+        onComplete={handleComplete}
+        onStatsChange={(cpm, acc) => { setLiveCpm(cpm); setLiveAccuracy(acc); }}
+      >
+        <div className="arena-character">
+          <TypingSession.Character className="arena-character-img" />
+        </div>
+        <TypingSession.Text
+          isKorean={phase === 'korean'}
+          className="arena-text"
+        />
+        <TypingSession.Input />
+      </TypingSession>
     </div>
   );
 };

@@ -1,74 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import TypingSession from '../components/TypingSession';
 import './Landing.css';
-
-/* ── 두벌식 keyboard demo data ──────────────────────────── */
-const KB_CHOSUNG   = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-const KB_JUNGSEONG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
-const KB_JONGSEONG = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-
-const JUNG_KEYS: Record<string, string[]> = {
-  'ㅏ':['ㅏ'],'ㅐ':['ㅐ'],'ㅑ':['ㅑ'],'ㅒ':['ㅒ'],
-  'ㅓ':['ㅓ'],'ㅔ':['ㅔ'],'ㅕ':['ㅕ'],'ㅖ':['ㅖ'],
-  'ㅗ':['ㅗ'],'ㅘ':['ㅗ','ㅏ'],'ㅙ':['ㅗ','ㅐ'],'ㅚ':['ㅗ','ㅣ'],
-  'ㅛ':['ㅛ'],'ㅜ':['ㅜ'],'ㅝ':['ㅜ','ㅓ'],'ㅞ':['ㅜ','ㅔ'],'ㅟ':['ㅜ','ㅣ'],
-  'ㅠ':['ㅠ'],'ㅡ':['ㅡ'],'ㅢ':['ㅡ','ㅣ'],'ㅣ':['ㅣ'],
-};
-const JONG_KEYS: Record<string, string[]> = {
-  '':[],'ㄱ':['ㄱ'],'ㄲ':['ㄱ'],'ㄳ':['ㄱ','ㅅ'],'ㄴ':['ㄴ'],
-  'ㄵ':['ㄴ','ㅈ'],'ㄶ':['ㄴ','ㅎ'],'ㄷ':['ㄷ'],'ㄹ':['ㄹ'],
-  'ㄺ':['ㄹ','ㄱ'],'ㄻ':['ㄹ','ㅁ'],'ㄼ':['ㄹ','ㅂ'],'ㄽ':['ㄹ','ㅅ'],
-  'ㄾ':['ㄹ','ㅌ'],'ㄿ':['ㄹ','ㅍ'],'ㅀ':['ㄹ','ㅎ'],'ㅁ':['ㅁ'],
-  'ㅂ':['ㅂ'],'ㅄ':['ㅂ','ㅅ'],'ㅅ':['ㅅ'],'ㅆ':['ㅅ'],
-  'ㅇ':['ㅇ'],'ㅈ':['ㅈ'],'ㅊ':['ㅊ'],'ㅋ':['ㅋ'],'ㅌ':['ㅌ'],'ㅍ':['ㅍ'],'ㅎ':['ㅎ'],
-};
-// 된소리 초성 → 물리 키 (시각적으로 같은 키를 켜줌)
-const CHO_KEY: Record<string, string> = {
-  'ㄱ':'ㄱ','ㄲ':'ㄱ','ㄴ':'ㄴ','ㄷ':'ㄷ','ㄸ':'ㄷ','ㄹ':'ㄹ',
-  'ㅁ':'ㅁ','ㅂ':'ㅂ','ㅃ':'ㅂ','ㅅ':'ㅅ','ㅆ':'ㅅ','ㅇ':'ㅇ',
-  'ㅈ':'ㅈ','ㅉ':'ㅈ','ㅊ':'ㅊ','ㅋ':'ㅋ','ㅌ':'ㅌ','ㅍ':'ㅍ','ㅎ':'ㅎ',
-};
-
-const KB_ROWS = [
-  ['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],
-  ['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],
-  ['ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ'],
-];
-const KB_SHIFT: Record<string, string> = {
-  'ㅂ':'ㅃ','ㅈ':'ㅉ','ㄷ':'ㄸ','ㄱ':'ㄲ','ㅅ':'ㅆ','ㅐ':'ㅒ','ㅔ':'ㅖ',
-};
-
-function syllableToKeys(char: string): string[] {
-  const code = char.charCodeAt(0);
-  if (code === 32) return ['SPACE'];
-  if (code < 0xAC00 || code > 0xD7A3) return [char];
-  const off  = code - 0xAC00;
-  const jIdx = off % 28;
-  const uIdx = Math.floor(off / 28) % 21;
-  const cIdx = Math.floor(off / 28 / 21);
-  const cho  = KB_CHOSUNG[cIdx];
-  const jung = KB_JUNGSEONG[uIdx];
-  const jong = KB_JONGSEONG[jIdx];
-  return [
-    CHO_KEY[cho] || cho,
-    ...(JUNG_KEYS[jung] || [jung]),
-    ...(jong ? (JONG_KEYS[jong] || [jong]) : []),
-  ];
-}
-
-interface Step { displayUpTo: string; activeKey: string; }
-
-function sentenceToKeystrokes(sentence: string): Step[] {
-  const steps: Step[] = [];
-  let built = '';
-  for (const char of sentence) {
-    for (const key of syllableToKeys(char)) {
-      steps.push({ displayUpTo: built + char, activeKey: key });
-    }
-    built += char;
-  }
-  return steps;
-}
 
 /* ── Hooks ──────────────────────────────────────────────── */
 function useInView(threshold = 0.2) {
@@ -85,26 +18,7 @@ function useInView(threshold = 0.2) {
   return [ref, inView] as const;
 }
 
-function useCounter(target: number, duration = 1600, start = false) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let t0: number | null = null;
-    const step = (ts: number) => {
-      if (!t0) t0 = ts;
-      const p = Math.min((ts - t0) / duration, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      setValue(target < 10 ? parseFloat((e * target).toFixed(1)) : Math.floor(e * target));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return value;
-}
-
-/* ── Components ─────────────────────────────────────────── */
-
-// 인트로 오버레이: "Typers" 타이핑 → 보라 플래시 → 사라짐
+/* ── Intro overlay ──────────────────────────────────────── */
 type IntroPhase = 'typing' | 'flash' | 'done';
 
 const IntroOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
@@ -140,87 +54,217 @@ const IntroOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
   );
 };
 
-// 두벌식 키보드 (키가 켜지고 꺼짐)
-const KoreanKeyboard: React.FC<{ litKey: string | null }> = ({ litKey }) => (
-  <div className="kb-wrap">
-    {KB_ROWS.map((row, ri) => (
-      <div key={ri} className="kb-row">
-        {row.map(k => (
-          <div key={k} className={`kb-key${litKey === k ? ' kb-key-lit' : ''}`}>
-            {KB_SHIFT[k] && <span className="kb-shift">{KB_SHIFT[k]}</span>}
-            {k}
-          </div>
-        ))}
-      </div>
-    ))}
-    <div className={`kb-space${litKey === 'SPACE' ? ' kb-key-lit' : ''}`} />
-  </div>
-);
 
-// 타이핑 데모 (텍스트 + 키보드)
-const DEMO_SENTENCES = [
-  '타이핑 연습을 시작해요',
-  '매일 조금씩 성장해요',
-  '틀려도 괜찮아요',
-  '빠르게 그리고 정확하게',
+/* ── Hero Typing Demo ───────────────────────────────────── */
+const HERO_TEXT = '목표 타수, 가이드와 동기부여로 달성한다';
+
+const HeroTypingDemo: React.FC<{ onScrollToTry: () => void }> = ({ onScrollToTry }) => {
+  const [done, setDone] = useState(false);
+
+  return (
+    <TypingSession
+      text={HERO_TEXT}
+      active={!done}
+      onComplete={() => { setDone(true); setTimeout(onScrollToTry, 500); }}
+      className="hero-td"
+    >
+      <TypingSession.Input />
+      <div className="hero-td-header">
+        <span className="hero-td-label">클릭하고 타이핑해보세요 ↓</span>
+        <TypingSession.Stats className="hero-td-stats" />
+      </div>
+      <div className="hero-td-character">
+        <TypingSession.Character className="hero-td-char-img" />
+      </div>
+      <TypingSession.Text isKorean className="hero-td-text" />
+      <button
+        className="hero-td-scroll"
+        onClick={e => { e.stopPropagation(); onScrollToTry(); }}
+      >
+        더 연습해보기 ↓
+      </button>
+    </TypingSession>
+  );
+};
+
+/* ── Try Section ────────────────────────────────────────── */
+const TRY_SENTENCES = [
+  '자격증 시험까지 한 달, 타수가 걱정되셨나요?',
+  '매일 20분, 목표를 향해 꾸준히 나아가요.',
+  '오늘의 연습이 내일의 타수가 됩니다.',
 ];
 
-const TypingDemo: React.FC<{ started: boolean }> = ({ started }) => {
-  const [sentenceIdx, setSentenceIdx] = useState(0);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [litKey, setLitKey] = useState<string | null>(null);
+const TrySentence: React.FC<{
+  text: string;
+  onComplete: () => void;
+}> = ({ text, onComplete }) => (
+  <TypingSession text={text} active onComplete={onComplete}>
+    <TypingSession.Input />
+    <div className="try-char-row">
+      <TypingSession.Character className="try-char-img" />
+      <TypingSession.Text isKorean className="try-sentence" />
+    </div>
+    <div className="try-stats">
+      <TypingSession.Stats
+        className="try-stat"
+        hint="클릭하고 타이핑 시작"
+      />
+    </div>
+  </TypingSession>
+);
 
-  const sentence = DEMO_SENTENCES[sentenceIdx];
-  const steps = useMemo(() => sentenceToKeystrokes(sentence), [sentence]);
+const TrySection = React.forwardRef<HTMLElement, { onStart: () => void }>(
+  ({ onStart }, ref) => {
+    const [sentenceIdx, setSentenceIdx] = useState(0);
+    const [done, setDone]               = useState(false);
+    const handleSentenceComplete = () => {
+      const next = sentenceIdx + 1;
+      if (next < TRY_SENTENCES.length) {
+        setTimeout(() => setSentenceIdx(next), 400);
+      } else {
+        setDone(true);
+      }
+    };
 
-  useEffect(() => {
-    if (!started) return;
-    if (stepIdx >= steps.length) {
-      const t = setTimeout(() => {
-        setSentenceIdx(i => (i + 1) % DEMO_SENTENCES.length);
-        setStepIdx(0);
-        setLitKey(null);
-      }, 1400);
-      return () => clearTimeout(t);
-    }
-    const step = steps[stepIdx];
-    setLitKey(step.activeKey);
-    const speed = step.activeKey === 'SPACE' ? 180 : 110;
-    const t = setTimeout(() => setStepIdx(i => i + 1), speed);
-    return () => clearTimeout(t);
-  }, [started, stepIdx, steps]);
+    const progress = (sentenceIdx / TRY_SENTENCES.length) * 100;
 
-  const currentDisplay = steps.length > 0
-    ? steps[Math.min(stepIdx, steps.length - 1)].displayUpTo
-    : '';
-  const remaining = sentence.slice(currentDisplay.length);
+    return (
+      <section ref={ref} className="l-try">
+        <div className="l-try-inner">
+          <div className="l-section-eyebrow">직접 체험해보세요</div>
+          <h2 className="l-try-title">지금 바로 타이핑해봐요</h2>
+          <div className="try-box">
+            <div className="try-progress-bar">
+              <div className="try-progress-fill" style={{ width: `${done ? 100 : progress}%` }} />
+            </div>
+            {done ? (
+              <div className="try-done">
+                <div className="try-done-sub">완료! 회원가입하고 목표를 설정해봐요</div>
+                <button className="l-btn-primary" style={{ marginTop: 20 }} onClick={onStart}>
+                  무료로 시작하기 →
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="try-idx">{sentenceIdx + 1} / {TRY_SENTENCES.length}</div>
+                <TrySentence
+                  key={sentenceIdx}
+                  text={TRY_SENTENCES[sentenceIdx]}
+                  onComplete={handleSentenceComplete}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+);
+
+/* ── Plan Calculator ────────────────────────────────────── */
+const CERT_PRESETS = [
+  { label: '컴활 2급', cpm: 200 },
+  { label: '한글 1급', cpm: 300 },
+  { label: '컴활 1급', cpm: 300 },
+  { label: '직접 입력', cpm: 0 },
+];
+const WEEK_OPTIONS = [2, 4, 8];
+
+const PlanCalculator: React.FC = () => {
+  const [currentCpm, setCurrentCpm]   = useState(150);
+  const [customTarget, setCustomTarget] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState(1);
+  const [weeks, setWeeks] = useState(4);
+
+  const effectiveTarget = selectedPreset === 3
+    ? (parseInt(customTarget) || 300)
+    : CERT_PRESETS[selectedPreset].cpm;
+
+  const gap = Math.max(0, effectiveTarget - currentCpm);
+  // 주당 약 10CPM 향상 가정 (하루 20분 기준)
+  const weeklyNeeded = weeks > 0 ? gap / weeks : gap;
+  const dailyMinutes = Math.round((weeklyNeeded / 10) * 20);
+  const clamped = Math.max(10, Math.min(dailyMinutes, 120));
+  const isTough = dailyMinutes > 60;
+  const alreadyThere = gap <= 0;
 
   return (
-    <div className="demo-wrap">
-      <div className="demo-text">
-        <span className="demo-typed">{currentDisplay}</span>
-        <span className="demo-cursor">│</span>
-        <span className="demo-remaining">{remaining}</span>
+    <div className="plan-calc">
+      <div className="plan-row">
+        <div className="plan-field">
+          <label className="plan-label">현재 타수</label>
+          <div className="plan-slider-wrap">
+            <input
+              type="range" min={50} max={600} step={10}
+              value={currentCpm}
+              onChange={e => setCurrentCpm(Number(e.target.value))}
+              className="plan-slider"
+            />
+            <span className="plan-slider-val">{currentCpm}<small>타</small></span>
+          </div>
+        </div>
+
+        <div className="plan-field">
+          <label className="plan-label">목표 타수</label>
+          <div className="plan-presets">
+            {CERT_PRESETS.map((p, i) => (
+              <button
+                key={i}
+                className={`plan-preset${selectedPreset === i ? ' plan-preset-active' : ''}`}
+                onClick={() => { setSelectedPreset(i); }}
+              >
+                {p.label}
+                {p.cpm > 0 && <span className="plan-preset-cpm">{p.cpm}타</span>}
+              </button>
+            ))}
+          </div>
+          {selectedPreset === 3 && (
+            <input
+              type="number" min={100} max={800} placeholder="목표 타수 입력"
+              value={customTarget}
+              onChange={e => setCustomTarget(e.target.value)}
+              className="plan-custom-input"
+            />
+          )}
+        </div>
+
+        <div className="plan-field">
+          <label className="plan-label">준비 기간</label>
+          <div className="plan-weeks">
+            {WEEK_OPTIONS.map(w => (
+              <button
+                key={w}
+                className={`plan-week-btn${weeks === w ? ' plan-week-active' : ''}`}
+                onClick={() => setWeeks(w)}
+              >
+                {w}주
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <KoreanKeyboard litKey={litKey} />
+
+      <div className={`plan-result${alreadyThere ? ' plan-result-ok' : isTough ? ' plan-result-hard' : ''}`}>
+        {alreadyThere ? (
+          <>
+            <span className="plan-result-icon">✓</span>
+            <span className="plan-result-text">이미 목표 타수에 도달했어요!</span>
+          </>
+        ) : (
+          <>
+            <span className="plan-result-icon">→</span>
+            <span className="plan-result-text">
+              하루 <strong>{clamped}분</strong> 연습으로 {weeks}주 안에 달성할 수 있어요
+              {isTough && <span className="plan-result-note"> — 기간을 늘려보세요</span>}
+            </span>
+          </>
+        )}
+      </div>
     </div>
   );
 };
 
-// 통계 카드 (스크롤 시 숫자 카운트 업)
-const StatCard: React.FC<{
-  target: number; suffix: string; label: string; inView: boolean;
-}> = ({ target, suffix, label, inView }) => {
-  const value = useCounter(target, 1600, inView);
-  return (
-    <div className="stat-card">
-      <div className="stat-number">{value}{suffix}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-};
-
-// 피처 카드 (스크롤 시 페이드인)
+/* ── Feature card ───────────────────────────────────────── */
 const FeatureCard: React.FC<{
   num: number; title: string; desc: string; delay: number;
 }> = ({ num, title, desc, delay }) => {
@@ -238,14 +282,19 @@ const FeatureCard: React.FC<{
   );
 };
 
-/* ── Landing page ────────────────────────────────────────── */
+/* ── Landing ────────────────────────────────────────────── */
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [introComplete, setIntroComplete] = useState(false);
   const [heroVisible,   setHeroVisible]   = useState(false);
-  const [statsRef, statsInView] = useInView(0.3);
+  const [planRef,  planInView]  = useInView(0.2);
+  const [ctaRef,   ctaInView]   = useInView(0.2);
+  const tryRef = useRef<HTMLElement>(null);
 
-  // Hero content fades in shortly after intro finishes
+  const scrollToTry = () => {
+    tryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   useEffect(() => {
     if (introComplete) {
       const t = setTimeout(() => setHeroVisible(true), 80);
@@ -259,15 +308,13 @@ const Landing: React.FC = () => {
     <div className="landing">
       <IntroOverlay onDone={() => setIntroComplete(true)} />
 
-      {/* ── Fixed Nav ── */}
+      {/* ── Nav ── */}
       <nav className={`l-nav${heroVisible ? ' l-nav-visible' : ''}`}>
-        <div className="l-nav-logo">
-          Ty<span className="l-nav-accent">pers</span>
-        </div>
+        <div className="l-nav-logo">Ty<span className="l-nav-accent">pers</span></div>
         <div className="l-nav-links">
-          {([['연습하기', '/typing'], ['랭킹', '/ranking'], ['커뮤니티', '#'], ['나의 기록', '/profile']] as [string, string][]).map(([label, href]) => (
+          {([['연습하기', '/typing'], ['랭킹', '/ranking'], ['나의 기록', '/profile']] as [string, string][]).map(([label, href]) => (
             <a key={label} href={href} className="l-nav-link"
-              onClick={e => { if (href !== '#') { e.preventDefault(); navigate(href); } }}>
+              onClick={e => { e.preventDefault(); navigate(href); }}>
               {label}
             </a>
           ))}
@@ -275,85 +322,106 @@ const Landing: React.FC = () => {
         <button className="l-nav-cta" onClick={handleStart}>무료 시작</button>
       </nav>
 
-      {/* ── Hero ── */}
+      {/* ── 1st fold · Hero ── */}
       <section className="l-hero">
-        {/* dot grid bg */}
         <div className="l-hero-dotgrid" />
-
         <div className={`l-hero-inner${heroVisible ? ' l-hero-inner-visible' : ''}`}>
-          <h1 className="l-hero-h1">
-            타이핑,<br />
-            <span className="l-hero-accent">다시 설레게</span>
-          </h1>
 
-          <p className="l-hero-sub">
-            틀려도 괜찮아요 — 그게 연습이니까.<br />
-            매일 10분으로 손이 먼저 기억하게 만들어요.
-          </p>
-
-          <div className="l-hero-cta-row">
-            <button className="l-btn-primary" onClick={handleStart}>
-              지금 바로 시작하기 →
+          {/* 좌측: 카피 */}
+          <div className="l-hero-left">
+            <div className="l-hero-eyebrow">자격증 · 과제 · 전공 실습</div>
+            <h1 className="l-hero-h1">
+              목표 타수까지<br />
+              <span className="l-hero-accent">가는 길이 보인다</span>
+            </h1>
+            <p className="l-hero-sub">
+              막연히 반복하지 않아도 돼요.<br />
+              목표와 기간을 입력하면 오늘 뭘 해야 할지 알려드려요.
+            </p>
+            <button className="l-btn-primary l-btn-hero" onClick={handleStart}>
+              무료로 시작하기 →
             </button>
-            <button className="l-btn-ghost" onClick={() => navigate('/typing')}>
-              데모 보기
-            </button>
+            <div className="l-hero-trust">
+              <span className="l-trust-item">✓ 회원가입 1분이면 완료</span>
+              <span className="l-trust-item">✓ 신용카드 불필요</span>
+            </div>
           </div>
 
-          {/* 두벌식 키보드 데모 */}
-          <div className={`l-hero-demo${heroVisible ? ' l-hero-demo-visible' : ''}`}>
-            <TypingDemo started={heroVisible} />
+          {/* 우측: 타이핑 데모 */}
+          <div className={`l-hero-right${heroVisible ? ' l-hero-right-visible' : ''}`}>
+            <HeroTypingDemo onScrollToTry={scrollToTry} />
           </div>
+
         </div>
       </section>
 
-      {/* ── Stats ── */}
+      {/* ── Try Section ── */}
+      <TrySection ref={tryRef} onStart={handleStart} />
+
+      {/* ── 2nd fold · Plan Demo ── */}
       <section
-        ref={statsRef as React.Ref<HTMLElement>}
-        className={`l-stats${statsInView ? ' l-stats-visible' : ''}`}
+        ref={planRef as React.Ref<HTMLElement>}
+        className={`l-plan${planInView ? ' l-plan-visible' : ''}`}
       >
-        <StatCard target={128400} suffix="+" label="누적 사용자"    inView={statsInView} />
-        <StatCard target={42}     suffix="%" label="평균 타속 향상" inView={statsInView} />
-        <StatCard target={15000}  suffix="+" label="연습 문장"      inView={statsInView} />
-        <StatCard target={4.9}    suffix="★" label="앱 평점"        inView={statsInView} />
+        <div className="l-plan-inner">
+          <div className="l-section-eyebrow">목표 기반 플랜</div>
+          <h2 className="l-plan-title">
+            목표 타수와 기간을 입력하면<br />
+            오늘 얼마나 연습할지 알려드려요
+          </h2>
+          <p className="l-plan-sub">
+            다른 앱은 목표를 설정할 수 있지만, 거기까지 어떻게 가야 하는지는 알려주지 않아요.
+          </p>
+          <PlanCalculator />
+        </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── 3rd fold · Features ── */}
       <section className="l-features">
         <div className="l-features-header">
           <div className="l-section-eyebrow">Features</div>
-          <h2 className="l-features-title">성장이 보이는<br />타이핑 연습</h2>
+          <h2 className="l-features-title">가이드와 동기부여로<br />목표 타수를 달성해요</h2>
         </div>
         <div className="l-feat-grid">
-          <FeatureCard num={1} delay={0}   title="실시간 속도 측정"
-            desc="타이핑할 때마다 WPM, 정확도가 실시간으로 표시돼요. 지금 내 실력을 정확하게 파악하세요." />
-          <FeatureCard num={2} delay={80}  title="성장 그래프"
-            desc="매일의 기록이 쌓여 그래프로 보여져요. 어제보다 오늘 더 빨라진 나를 직접 눈으로 확인해요." />
-          <FeatureCard num={3} delay={160} title="맞춤형 커리큘럼"
-            desc="초보부터 고수까지 레벨에 맞는 코스를 제공해요. 틀린 글자는 집중 훈련으로 정복하세요." />
+          <FeatureCard num={1} delay={0}
+            title="목표 기반 플랜"
+            desc="현재 타수·목표 타수·준비 기간을 입력하면 하루 권장 연습량과 예상 달성일을 자동으로 계산해드려요." />
+          <FeatureCard num={2} delay={80}
+            title="성장 대시보드"
+            desc="CPM과 정확도 추이를 매일 기록해 그래프로 보여드려요. 어제보다 빨라진 손을 직접 눈으로 확인하세요." />
+          <FeatureCard num={3} delay={160}
+            title="학교대항전"
+            desc="같은 학교 친구들과 실시간 타이핑 배틀. 경쟁이 생기면 연습이 달라져요." />
         </div>
       </section>
 
-      {/* ── Philosophy ── */}
-      <section className="l-phil">
-        <div className="l-phil-card">
-          <div className="l-phil-copy">
-            <div className="l-section-eyebrow" style={{ color: '#8758FF' }}>Our Philosophy</div>
-            <h2 className="l-phil-title">틀리는 게<br />연습이에요.</h2>
-            <p className="l-phil-body">
-              Typers는 실수를 실패로 보지 않아요.<br />
-              모든 오타, 모든 느린 타이핑이 여러분이<br />
-              성장하고 있다는 신호예요.
+      {/* ── 4th fold · CTA ── */}
+      <section
+        ref={ctaRef as React.Ref<HTMLElement>}
+        className={`l-cta${ctaInView ? ' l-cta-visible' : ''}`}
+      >
+        <div className="l-cta-card">
+          <div className="l-cta-copy">
+            <div className="l-section-eyebrow" style={{ color: 'var(--lprimary)' }}>만든 사람</div>
+            <h2 className="l-cta-title">
+              영어 타수 100타에서<br />
+              <span className="l-hero-accent">1000타까지 올려본 사람</span>이<br />
+              만들었어요
+            </h2>
+            <p className="l-cta-body">
+              직업계고에서 자격증을 준비하며 타이핑이 발목을 잡았던 경험,
+              기존 앱으로 연습해도 어떻게 올려야 할지 몰랐던 그 막막함.
+              그때 이런 앱이 있었으면 좋았을 것 같아서 만들었어요.
             </p>
             <button className="l-btn-primary" onClick={handleStart}>
-              나도 시작해보기 →
+              지금 무료로 시작하기 →
             </button>
           </div>
-          <div className="l-phil-bars">
+          <div className="l-cta-bars">
             {[
-              { label:'오타율',    from:'18%', to:'4%',   pct: 4  },
-              { label:'타속 (WPM)',from:'120', to:'210',  pct: 70 },
-              { label:'정확도',   from:'82%', to:'97%',  pct: 97 },
+              { label: '영어 타수', from: '100타', to: '1000타', pct: 100 },
+              { label: '연습 지속일', from: '3일', to: '꾸준히', pct: 85 },
+              { label: '자격증 합격', from: '불합격', to: '합격', pct: 100 },
             ].map(({ label, from, to, pct }) => (
               <div key={label} className="l-bar-row">
                 <div className="l-bar-meta">
@@ -372,9 +440,9 @@ const Landing: React.FC = () => {
       {/* ── Footer ── */}
       <footer className="l-footer">
         <div className="l-footer-logo">Ty<span className="l-nav-accent">pers</span></div>
-        <div className="l-footer-copy">© 2026 Typers. 타이핑을 다시 설레게.</div>
+        <div className="l-footer-copy">© 2026 Typers. 목표 타수까지 가는 길.</div>
         <div className="l-footer-links">
-          {['이용약관','개인정보처리방침','고객센터'].map(m => (
+          {['이용약관', '개인정보처리방침'].map(m => (
             <a key={m} href="#" className="l-footer-link">{m}</a>
           ))}
         </div>
