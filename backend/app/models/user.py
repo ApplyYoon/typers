@@ -21,3 +21,4 @@ class User(Base):
 
     sessions:     Mapped[list["PracticeSession"]] = relationship(back_populates="user")  # noqa: F821
     dictionaries: Mapped[list["Dictionary"]]     = relationship(back_populates="user")  # noqa: F821
+    goal:         Mapped[list["UserGoal"]]        = relationship(back_populates="user")  # noqa: F821

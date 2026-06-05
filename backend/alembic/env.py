@@ -8,7 +8,7 @@ from alembic import context
 
 # app 모델 import (autogenerate가 테이블을 인식하려면 반드시 필요)
 from app.db.base import Base
-from app.models import user, practice  # noqa: F401
+from app.models import user, practice, goal  # noqa: F401
 from app.core.config import settings
 
 config = context.config

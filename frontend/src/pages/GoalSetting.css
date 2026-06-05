@@ -1,0 +1,180 @@
+/* ── GoalSetting page ───────────────────────────────────── */
+
+.gs-page {
+  min-height: 100vh;
+  background: #F9FAFB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  font-family: 'GmarketSans', 'Noto Sans KR', sans-serif;
+}
+
+.gs-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.gs-header { display: flex; flex-direction: column; gap: 8px; }
+
+.gs-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.gs-desc {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Section ────────────────────────────────────────────── */
+.gs-section { display: flex; flex-direction: column; gap: 12px; }
+
+.gs-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+/* ── 자격증 프리셋 ───────────────────────────────────────── */
+.gs-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.gs-preset {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 12px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.gs-preset:hover { border-color: #8758FF; }
+.gs-preset--active {
+  border-color: #8758FF;
+  background: rgba(135,88,255,0.06);
+}
+
+.gs-preset-name { font-size: 13px; font-weight: 700; color: #111827; }
+.gs-preset-cpm  { font-size: 12px; color: #6B7280; }
+
+/* ── 마감일 프리셋 ──────────────────────────────────────── */
+.gs-deadline-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gs-deadline-btn {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.gs-deadline-btn:hover { border-color: #8758FF; }
+.gs-deadline-btn--active {
+  border-color: #8758FF;
+  background: rgba(135,88,255,0.06);
+  color: #8758FF;
+}
+
+/* ── 직접 입력 ──────────────────────────────────────────── */
+.gs-input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111827;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+}
+.gs-input:focus { border-color: #8758FF; }
+
+/* ── 플랜 미리보기 ──────────────────────────────────────── */
+.gs-preview {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: border-color 200ms ease;
+}
+.gs-preview--warn { border-color: #f59e0b; background: #fffbeb; }
+
+.gs-preview-icon { font-weight: 700; color: #8758FF; flex-shrink: 0; }
+.gs-preview-text { font-size: 14px; color: #374151; line-height: 1.5; }
+.gs-preview-text strong { color: #111827; }
+.gs-preview-warning { font-size: 12px; color: #f59e0b; margin-top: 4px; }
+
+/* ── Error ──────────────────────────────────────────────── */
+.gs-error { font-size: 13px; color: #ef4444; text-align: center; margin: 0; }
+
+/* ── Actions ────────────────────────────────────────────── */
+.gs-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gs-btn-primary {
+  width: 100%;
+  background: #8758FF;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease;
+}
+.gs-btn-primary:hover:not(:disabled) { background: #7248EE; transform: scale(1.02); }
+.gs-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.gs-btn-skip {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: #9CA3AF;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 150ms ease;
+}
+.gs-btn-skip:hover { color: #6B7280; }

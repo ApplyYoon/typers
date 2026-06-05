@@ -13,6 +13,7 @@ import Battle from './pages/Battle';
 import RankBattle from './pages/RankBattle';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
+import GoalSetting from './pages/GoalSetting';
 import './styles/global.css';
 
 const RootRoute: React.FC = () => {
@@ -33,7 +34,8 @@ const AppRoutes: React.FC = () => (
     <Route path="/"          element={<RootRoute />} />
     <Route path="/login"     element={<Login />} />
     <Route path="/register"  element={<Register />} />
-    <Route path="/level-test" element={<LevelTest />} />
+    <Route path="/level-test"   element={<LevelTest />} />
+    <Route path="/goal-setting" element={<GoalSetting />} />
     <Route path="/ranking"   element={<Layout><Ranking /></Layout>} />
     <Route path="/profile"   element={<Layout><Profile /></Layout>} />
     <Route path="/custom"    element={<Layout><Custom /></Layout>} />
