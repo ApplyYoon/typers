@@ -166,6 +166,11 @@
   padding-top: 0;
 }
 
+.home-grid--single {
+  grid-template-columns: 1fr;
+  max-width: 720px;
+}
+
 /* ── 카드 ────────────────────────────────────────────────── */
 .home-card {
   background: #fff;

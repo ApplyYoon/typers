@@ -75,9 +75,9 @@ const Home: React.FC = () => {
 
       {/* ── 콘텐츠 ─────────────────────────────── */}
       <section className="home-content">
-        <div className="home-section-inner home-grid">
+        <div className="home-section-inner home-grid home-grid--single">
 
-          {/* 좌측: 목표 + 차트 */}
+          {/* 목표 + 차트 */}
           <div className="home-left">
 
             {/* 목표 카드 */}
@@ -179,37 +179,6 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* 우측: 학교대항전 */}
-          <div className="home-right">
-            <div className="home-card home-action-card">
-              <h2 className="home-card-title">학교대항전</h2>
-              <p className="home-action-desc">
-                학교를 선택하고 65초 동안 한국어·영어 타이핑으로 학교의 명예를 걸고 경쟁하세요.
-              </p>
-              <div className="home-action-stats">
-                <div className="home-stat">
-                  <span className="home-stat-num">65</span>
-                  <span className="home-stat-unit">초</span>
-                  <span className="home-stat-label">제한 시간</span>
-                </div>
-                <div className="home-stat-divider" />
-                <div className="home-stat">
-                  <span className="home-stat-num">40</span>
-                  <span className="home-stat-unit">초</span>
-                  <span className="home-stat-label">한국어</span>
-                </div>
-                <div className="home-stat-divider" />
-                <div className="home-stat">
-                  <span className="home-stat-num">20</span>
-                  <span className="home-stat-unit">초</span>
-                  <span className="home-stat-label">영어</span>
-                </div>
-              </div>
-              <button className="btn-primary full-width" onClick={() => navigate('/battle')}>
-                지금 시작하기
-              </button>
-            </div>
-          </div>
 
         </div>
       </section>
