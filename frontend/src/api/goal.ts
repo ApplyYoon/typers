@@ -14,6 +14,9 @@ export interface GoalResponse {
   progress_pct: number;
   is_achieved: boolean;
   warning: string | null;
+  today_minutes: number;
+  today_completed: boolean;
+  streak: number;
 }
 
 export const goalApi = {

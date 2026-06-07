@@ -107,6 +107,15 @@ const Home: React.FC = () => {
                 </div>
 
                 {/* 오늘 플랜 */}
+                {/* 스트릭 */}
+                {goalData.streak > 0 && (
+                  <div className="goal-streak">
+                    <span className="goal-streak-fire">🔥</span>
+                    <span className="goal-streak-num">{goalData.streak}일</span>
+                    <span className="goal-streak-label">연속 달성 중</span>
+                  </div>
+                )}
+
                 {goalData.is_achieved ? (
                   <div className="goal-achieved">
                     🎉 목표 타수를 달성했어요! 새 목표를 설정해봐요.
@@ -116,19 +125,41 @@ const Home: React.FC = () => {
                   </div>
                 ) : (
                   <div className="goal-today">
-                    <div className="goal-today-label">오늘의 플랜</div>
+                    <div className="goal-today-header">
+                      <div className="goal-today-label">오늘의 플랜</div>
+                      {goalData.today_completed && (
+                        <span className="goal-today-done">✓ 완료</span>
+                      )}
+                    </div>
+
+                    {/* 오늘 진행률 */}
+                    <div className="goal-today-progress">
+                      <div className="goal-today-progress-bar">
+                        <div
+                          className="goal-today-progress-fill"
+                          style={{
+                            width: `${Math.min((goalData.today_minutes / goalData.daily_minutes) * 100, 100)}%`
+                          }}
+                        />
+                      </div>
+                      <span className="goal-today-progress-text">
+                        {goalData.today_minutes} / {goalData.daily_minutes}분
+                      </span>
+                    </div>
+
                     <div className="goal-today-minutes">
-                      {goalData.daily_minutes}<span>분</span>
+                      {Math.max(goalData.daily_minutes - goalData.today_minutes, 0)}
+                      <span>분 남았어요</span>
                     </div>
-                    <div className="goal-today-sub">
-                      오늘 {goalData.daily_minutes}분 연습하면 목표에 가까워져요
-                    </div>
+
                     {goalData.warning && (
                       <div className="goal-warning">{goalData.warning}</div>
                     )}
-                    <button className="btn-primary goal-start-btn" onClick={() => navigate('/typing')}>
-                      지금 연습하기 →
-                    </button>
+                    {!goalData.today_completed && (
+                      <button className="btn-primary goal-start-btn" onClick={() => navigate('/typing')}>
+                        지금 연습하기 →
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

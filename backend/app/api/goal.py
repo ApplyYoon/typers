@@ -1,7 +1,7 @@
 import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, cast, Date
 
 from app.deps import get_db, get_current_user
 from app.models.user import User
@@ -27,6 +27,52 @@ async def _get_current_cpm(user: User, db: AsyncSession) -> int:
     if avg is not None:
         return int(avg)
     return user.initial_cpm or 0
+
+
+async def _get_daily_stats(user_id, daily_minutes: int, db: AsyncSession) -> dict:
+    """오늘 연습 분 + 연속 달성 일수 계산."""
+    tz = datetime.timezone.utc
+    today = datetime.date.today()
+    target_seconds = daily_minutes * 60
+
+    # 최근 60일치 날짜별 duration 합계
+    cutoff = datetime.datetime.now(tz) - datetime.timedelta(days=60)
+    rows = await db.execute(
+        select(
+            cast(PracticeSession.created_at, Date).label("day"),
+            func.sum(PracticeSession.duration).label("total_sec"),
+        )
+        .where(PracticeSession.user_id == user_id)
+        .where(PracticeSession.created_at >= cutoff)
+        .group_by("day")
+        .order_by("day")
+    )
+    daily_map: dict[datetime.date, int] = {r.day: r.total_sec for r in rows}
+
+    today_sec = daily_map.get(today, 0)
+    today_minutes_done = today_sec // 60
+    today_completed = today_sec >= target_seconds
+
+    # 연속 달성: 어제부터 역산 (오늘은 아직 기회 있으므로 어제부터)
+    streak = 0
+    check = today - datetime.timedelta(days=1)
+    while True:
+        sec = daily_map.get(check, 0)
+        if sec >= target_seconds:
+            streak += 1
+            check -= datetime.timedelta(days=1)
+        else:
+            break
+
+    # 오늘 이미 완료했으면 streak에 포함
+    if today_completed:
+        streak += 1
+
+    return {
+        "today_minutes": today_minutes_done,
+        "today_completed": today_completed,
+        "streak": streak,
+    }
 
 
 def _calc_plan(target_cpm: int, current_cpm: int, deadline: datetime.date) -> dict:
@@ -93,12 +139,14 @@ async def upsert_goal(
 
     current_cpm = await _get_current_cpm(current_user, db)
     plan = _calc_plan(goal.target_cpm, current_cpm, goal.deadline)
+    daily = await _get_daily_stats(current_user.id, plan["daily_minutes"], db)
 
     return GoalResponse(
         target_cpm=goal.target_cpm,
         deadline=goal.deadline,
         current_cpm=current_cpm,
         **plan,
+        **daily,
     )
 
 
@@ -107,7 +155,7 @@ async def get_my_goal(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """내 목표 + 오늘의 플랜 조회."""
+    """내 목표 + 오늘의 플랜 + streak 조회."""
     result = await db.execute(
         select(UserGoal).where(UserGoal.user_id == current_user.id)
     )
@@ -119,12 +167,14 @@ async def get_my_goal(
 
     current_cpm = await _get_current_cpm(current_user, db)
     plan = _calc_plan(goal.target_cpm, current_cpm, goal.deadline)
+    daily = await _get_daily_stats(current_user.id, plan["daily_minutes"], db)
 
     return GoalResponse(
         target_cpm=goal.target_cpm,
         deadline=goal.deadline,
         current_cpm=current_cpm,
         **plan,
+        **daily,
     )
 
 

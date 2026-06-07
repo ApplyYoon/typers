@@ -31,6 +31,11 @@ class GoalResponse(BaseModel):
     daily_minutes: int
     progress_pct: int
     is_achieved: bool
-    warning: str | None = None  # "기간을 늘려보세요" 등
+    warning: str | None = None
+
+    # 데일리 가이드
+    today_minutes: int = 0       # 오늘 연습한 분
+    today_completed: bool = False # 오늘 목표 달성 여부
+    streak: int = 0               # 연속 달성 일수
 
     model_config = {"from_attributes": True}

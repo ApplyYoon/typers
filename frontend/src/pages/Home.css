@@ -302,6 +302,21 @@
 }
 
 /* 오늘 플랜 */
+/* 스트릭 */
+.goal-streak {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 99px;
+  padding: 6px 14px;
+  align-self: flex-start;
+}
+.goal-streak-fire { font-size: 18px; }
+.goal-streak-num  { font-size: 16px; font-weight: 800; color: #ea580c; }
+.goal-streak-label { font-size: 13px; color: #9a3412; }
+
 .goal-today {
   background: #f9fafb;
   border-radius: 12px;
@@ -311,12 +326,52 @@
   gap: 6px;
 }
 
+.goal-today-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .goal-today-label {
   font-size: 11px;
   font-weight: 700;
   color: #9ca3af;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.goal-today-done {
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 99px;
+  padding: 2px 10px;
+}
+
+/* 오늘 진행률 바 */
+.goal-today-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.goal-today-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.goal-today-progress-fill {
+  height: 100%;
+  background: var(--purple-primary);
+  border-radius: 99px;
+  transition: width 600ms ease;
+}
+.goal-today-progress-text {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .goal-today-minutes {
