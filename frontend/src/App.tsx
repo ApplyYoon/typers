@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -50,6 +51,7 @@ const App: React.FC = () => (
   <BrowserRouter>
     <AuthProvider>
       <AppRoutes />
+      <Analytics />
     </AuthProvider>
   </BrowserRouter>
 );
