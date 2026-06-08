@@ -362,10 +362,6 @@ const Landing: React.FC = () => {
             <button className="l-btn-primary l-btn-hero" onClick={handleStart}>
               무료로 시작하기 →
             </button>
-            <div className="l-hero-trust">
-              <span className="l-trust-item">✓ 회원가입 1분이면 완료</span>
-              <span className="l-trust-item">✓ 신용카드 불필요</span>
-            </div>
           </div>
 
           {/* 우측: 타이핑 데모 */}

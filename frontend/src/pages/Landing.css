@@ -243,19 +243,6 @@
   border-radius: 10px;
 }
 
-.l-hero-trust {
-  display: flex;
-  gap: 20px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
-.l-trust-item {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--lsub);
-}
-
 /* ── Hero mockup ──────────────────────────────────────────── */
 .hero-mockup {
   background: #fff;
