@@ -350,7 +350,7 @@ const Landing: React.FC = () => {
 
           {/* 좌측: 카피 */}
           <div className="l-hero-left">
-            <div className="l-hero-eyebrow">자격증 · 과제 · 전공 실습</div>
+            <div className="l-hero-eyebrow">NEW 타자 연습 플랫폼</div>
             <h1 className="l-hero-h1">
               목표 타수까지<br />
               <span className="l-hero-accent">가는 길이 보인다</span>
@@ -359,9 +359,9 @@ const Landing: React.FC = () => {
               막연히 반복하지 않아도 돼요.<br />
               목표와 기간을 입력하면 오늘 뭘 해야 할지 알려드려요.
             </p>
-            <button className="l-btn-primary l-btn-hero" onClick={handleStart}>
+            {/* <button className="l-btn-primary l-btn-hero" onClick={handleStart}>
               무료로 시작하기 →
-            </button>
+            </button> */}
           </div>
 
           {/* 우측: 타이핑 데모 */}

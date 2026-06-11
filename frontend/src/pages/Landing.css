@@ -612,7 +612,7 @@
 }
 
 .hero-td-label {
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--lprimary);
   letter-spacing: 0.02em;
@@ -654,8 +654,8 @@
   margin-bottom: 4px;
 }
 .hero-td-preview-char {
-  width: 36px;
-  height: 36px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
   flex-shrink: 0;
 }
