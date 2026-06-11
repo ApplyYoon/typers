@@ -1,0 +1,152 @@
+/* =============================================================
+   Roadmap — 독수리 타법 탈출 로드맵
+============================================================= */
+
+.roadmap-page {
+  min-height: calc(100vh - 56px);
+  background: var(--gray-100);
+}
+
+.roadmap-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── 헤더 ───────────────────────────────────────────────── */
+.roadmap-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.roadmap-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--purple-primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.roadmap-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gray-800);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.roadmap-sub {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ── 빈 상태 ────────────────────────────────────────────── */
+.roadmap-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 24px;
+  background: #fff;
+  border-radius: 16px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ── 경로 ───────────────────────────────────────────────── */
+.roadmap-path {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.roadmap-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.roadmap-row--right {
+  flex-direction: row-reverse;
+}
+
+/* ── 노드 ───────────────────────────────────────────────── */
+.roadmap-node {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: #fff;
+  border: 3px solid var(--gray-200);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.roadmap-node-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+.roadmap-node-id {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+}
+
+.roadmap-node--current {
+  border-color: var(--purple-primary);
+  box-shadow: 0 4px 16px rgba(135, 88, 255, 0.3);
+  animation: roadmap-pulse 1.8s ease-in-out infinite;
+}
+.roadmap-node--current .roadmap-node-icon { color: var(--purple-primary); }
+.roadmap-node--current .roadmap-node-id   { color: var(--purple-primary); }
+
+.roadmap-node--completed {
+  border-color: #03CF5D;
+  background: #03CF5D;
+}
+.roadmap-node--completed .roadmap-node-icon,
+.roadmap-node--completed .roadmap-node-id { color: #fff; }
+
+.roadmap-node--locked {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.roadmap-node:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+@keyframes roadmap-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(135, 88, 255, 0.3); }
+  50%      { box-shadow: 0 4px 24px rgba(135, 88, 255, 0.5); }
+}
+
+/* ── 카드 ───────────────────────────────────────────────── */
+.roadmap-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+.roadmap-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.roadmap-card-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+.roadmap-card-best {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--purple-primary);
+  margin-bottom: 2px;
+}
+.roadmap-card-target {
+  font-size: 11px;
+  color: #9ca3af;
+}

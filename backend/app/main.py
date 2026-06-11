@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.api import auth, practice, dictionaries
 from app.api.battle import router as battle_router, start_match_subscriber
 from app.api.goal import router as goal_router
+from app.api.curriculum import router as curriculum_router
 from app.services.redis_client import open_redis, close_redis
 from app.services.matching_worker import start_matching_worker, stop_matching_worker
 
@@ -59,6 +60,7 @@ app.include_router(practice.router)
 app.include_router(dictionaries.router)
 app.include_router(battle_router)
 app.include_router(goal_router)
+app.include_router(curriculum_router)
 
 
 @app.get("/health")

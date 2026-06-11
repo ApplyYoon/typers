@@ -15,6 +15,7 @@ import RankBattle from './pages/RankBattle';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
 import GoalSetting from './pages/GoalSetting';
+import Roadmap from './pages/Roadmap';
 import './styles/global.css';
 
 const RootRoute: React.FC = () => {
@@ -41,6 +42,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/profile"   element={<Layout><Profile /></Layout>} />
     <Route path="/custom"    element={<Layout><Custom /></Layout>} />
     <Route path="/typing"    element={<Layout><Typing /></Layout>} />
+    <Route path="/roadmap"   element={<Layout><Roadmap /></Layout>} />
     <Route path="/battle"      element={<Layout><Battle /></Layout>} />
     <Route path="/real-battle" element={<Layout><RankBattle /></Layout>} />
     <Route path="/home"        element={<Layout><Home /></Layout>} />

@@ -469,6 +469,80 @@
   border-bottom-color: var(--purple-primary);
 }
 
+/* ── 오늘의 목표 배너 (idle) ──────────────────────────────── */
+.typing-goal-banner {
+  width: 100%;
+  max-width: 320px;
+  background: var(--gray-100);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.typing-goal-banner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.typing-goal-banner-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.typing-goal-banner-done {
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 99px;
+  padding: 2px 10px;
+}
+.typing-goal-progress-track {
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.typing-goal-progress-fill {
+  height: 100%;
+  background: var(--purple-primary);
+  border-radius: 99px;
+  transition: width 600ms ease;
+}
+.typing-goal-progress-text {
+  font-size: 12px;
+  color: #6b7280;
+  align-self: flex-end;
+}
+
+/* ── 오늘의 목표 결과 카드 ─────────────────────────────────── */
+.result-goal-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--purple-bg);
+  border: 1px solid var(--purple-lighter);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.result-goal-msg {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+  text-align: center;
+}
+.result-goal-streak {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ea580c;
+}
+
 /* ── 커스텀 사전 배너 ─────────────────────────────────────── */
 .custom-dict-banner {
   display: flex;

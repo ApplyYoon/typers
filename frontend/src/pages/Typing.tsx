@@ -6,6 +6,7 @@ import { savePracticeSession, getActivityData } from '../utils/practiceStorage';
 import { useAuth } from '../context/AuthContext';
 import { practiceApi } from '../api/practice';
 import { dictApi, type Dictionary } from '../api/dictionary';
+import { goalApi, type GoalResponse } from '../api/goal';
 import './Typing.css';
 
 /* ── 타입 ─────────────────────────────────────────────────── */
@@ -67,6 +68,7 @@ const Typing: React.FC = () => {
   const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [result, setResult]       = useState<SessionResult | null>(null);
   const [chartData, setChartData] = useState(() => getActivityData());
+  const [goal, setGoal]           = useState<GoalResponse | null>(null);
 
   const startTimeRef     = useRef(0);
   const finishedRef      = useRef(false);
@@ -84,6 +86,12 @@ const Typing: React.FC = () => {
 
   const customDictRef = useRef<Dictionary | null>(null);
   useEffect(() => { customDictRef.current = customDict; }, [customDict]);
+
+  // 목표 플랜 로드 (오늘의 목표 진행률 표시용)
+  useEffect(() => {
+    if (!user) return;
+    goalApi.get().then(setGoal).catch(() => setGoal(null));
+  }, [user]);
 
   const handleComplete = useCallback(() => {
     if (finishedRef.current) return;
@@ -126,6 +134,9 @@ const Typing: React.FC = () => {
         duration:  durationRef.current,
         sentences: sentencesDoneRef.current,
         error_log: sessionRef.current!.getErrorLog(),
+      }).then(() => {
+        // 오늘의 목표 진행률 갱신
+        goalApi.get().then(setGoal).catch(() => {});
       }).catch(() => {/* 네트워크 오류 무시 */});
     }
   }, []);
@@ -235,6 +246,21 @@ const Typing: React.FC = () => {
           {/* idle */}
           {phase === 'idle' && (
             <div className="practice-idle">
+              {goal && !goal.is_achieved && (
+                <div className="typing-goal-banner">
+                  <div className="typing-goal-banner-row">
+                    <span className="typing-goal-banner-label">오늘의 목표</span>
+                    {goal.today_completed && <span className="typing-goal-banner-done">✓ 완료</span>}
+                  </div>
+                  <div className="typing-goal-progress-track">
+                    <div
+                      className="typing-goal-progress-fill"
+                      style={{ width: `${Math.min((goal.today_minutes / goal.daily_minutes) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="typing-goal-progress-text">{goal.today_minutes} / {goal.daily_minutes}분</span>
+                </div>
+              )}
               {customDict ? (
                 <div className="custom-dict-banner">
                   <span className="custom-dict-badge">커스텀 사전</span>
@@ -365,6 +391,32 @@ const Typing: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              )}
+              {goal && (
+                goal.is_achieved ? (
+                  <div className="result-goal-card">
+                    <p className="result-goal-msg">🎉 목표 타수를 달성했어요!</p>
+                  </div>
+                ) : goal.today_completed ? (
+                  <div className="result-goal-card">
+                    <p className="result-goal-msg">🎉 오늘의 목표를 달성했어요!</p>
+                    {goal.streak > 0 && (
+                      <p className="result-goal-streak">🔥 {goal.streak}일 연속 달성 중</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="result-goal-card">
+                    <div className="typing-goal-progress-track">
+                      <div
+                        className="typing-goal-progress-fill"
+                        style={{ width: `${Math.min((goal.today_minutes / goal.daily_minutes) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="result-goal-msg">
+                      오늘 목표까지 {Math.max(goal.daily_minutes - goal.today_minutes, 0)}분 남았어요
+                    </p>
+                  </div>
+                )
               )}
               <button className="practice-start-btn" onClick={handleRestart}>다시 도전</button>
             </div>
